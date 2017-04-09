@@ -407,7 +407,7 @@ def iter_mmap_heap_chunks(pid):
                 if offset == '00000000': # FIXME bits?
                     if dev == '00:00': # FIXME
                         if inode == '0': # FIXME
-                            if pathname == '': # FIXME
+                            if pathname == '' or pathname.find('[heap]')>=0: # FIXME
                                 # print 'heap line?:', line
                                 # print m.groups()
                                 start, end = [int(m.group(i), 16) for i in (1, 2)]
