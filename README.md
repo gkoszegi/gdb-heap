@@ -94,6 +94,7 @@ heap select - query used heap chunks
 hexdump <addr> [-c] - print a hexdump, stating at the specific region of memory (expose hex characters with -c option)
 heap arenas - print glibs arenas
 heap arena <arena> - select glibc arena number
+heap cpp [c++ typename] - list allocations with dynamic C++ type info
 ```
 
 Useful resources
