@@ -383,7 +383,12 @@ def iter_mmap_heap_chunks(pid):
     process (by PID) by reading /proc/PID/maps
 
     Yield a sequence of (start, end) pairs'''
-    for line in open('/proc/%i/maps' % pid):
+    try:
+        mmaps = open('proc%i.maps' % pid)
+    except:
+        mmaps = open('/proc/%i/maps' % pid)
+
+    for line in mmaps:
         # print line,
         # e.g.:
         # 38e441e000-38e441f000 rw-p 0001e000 fd:01 1087                           /lib64/ld-2.11.1.so
