@@ -18,7 +18,7 @@ import gdb
 import re
 import sys
 
-from heap.glibc import glibc_arenas
+from heap.glibc import glibc_arenas, caching_lookup_type
 from heap.history import history, Snapshot, Diff
 
 from heap import lazily_get_usage_list, \
@@ -181,6 +181,44 @@ class HeapFree(gdb.Command):
 
         print("Total size: %s" % total_size)
 
+
+class HeapCpp(gdb.Command):
+    'Print C++ chunks'
+    def __init__(self):
+        gdb.Command.__init__ (self,
+                              "heap cpp",
+                              gdb.COMMAND_DATA)
+
+    @need_debuginfo
+    def invoke(self, args, from_tty):
+        print('C++ objects of memory on heap')
+        print('-----------------------------')
+        argv = args.split(' ')
+        from heap.cplusplus import get_class_name
+        ms = glibc_arenas.get_ms()
+        for i, chunk in enumerate(ms.iter_chunks()):
+            if not chunk.is_inuse():
+                continue
+            mem = chunk.as_mem()
+            size = chunk.chunksize()
+            cpp_class = get_class_name(mem, size)
+            if not cpp_class:
+                continue
+            if args and cpp_class.find(argv[0]) < 0:
+                continue
+            try:
+                objsize = caching_lookup_type(cpp_class).sizeof
+                if (size/objsize >= 2):
+                    cpp_class += "[%d]" % (size/objsize)
+            except: objsize = "?"
+            u = Usage(mem, size)
+            #hd = hexdump_as_bytes(mem, 32)
+            print ('%6i: %s -> %s %8i bytes %100s | %s bytes/obj'
+                   % (i,
+                      fmt_addr(mem),
+                      fmt_addr(mem+size-1),
+                      size, cpp_class, objsize))
+        print("\n")
 
 class HeapAll(gdb.Command):
     'Print all heap chunks'
@@ -354,6 +392,8 @@ def register_commands():
     HeapSelect()
     HeapArenas()
     HeapArenaSelect()
+    HeapCpp()
+
     Hexdump()
 
     from heap.cpython import register_commands as register_cpython_commands
