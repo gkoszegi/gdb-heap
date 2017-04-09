@@ -64,7 +64,10 @@ def caching_lookup_type(typename):
         gdbtype = gdb.lookup_type(typename).strip_typedefs()
     except RuntimeError as e:
         # did not find the type: add a None to the cache
-        gdbtype = None
+        if (typename[:1] != "'" and typename.find("::") >= 0):
+            gdbtype = caching_lookup_type("'%s'" % typename)
+        else:
+            gdbtype = None
     __type_cache[typename] = gdbtype
     if gdbtype:
         return gdbtype
@@ -565,7 +568,7 @@ def categorize(u, usage_set):
     # "heap" disappears in the fallback form of execute, unless we "set pagination off"
     from heap.compat import has_gdb_execute_to_string
     #  Disable for now, see https://bugzilla.redhat.com/show_bug.cgi?id=620930
-    if False: # has_gdb_execute_to_string:
+    if has_gdb_execute_to_string:
         from heap.cplusplus import get_class_name
         cpp_cls = get_class_name(addr, size)
         if cpp_cls:
